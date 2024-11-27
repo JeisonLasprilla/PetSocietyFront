@@ -1,0 +1,7 @@
+.link{
+    @apply hover:bg-gray-400 mr-2 transition-all rounded-xl
+}
+
+.active {
+    @apply bg-gray-200 rounded-xl
+}
