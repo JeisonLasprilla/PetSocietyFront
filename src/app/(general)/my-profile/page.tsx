@@ -20,6 +20,7 @@ interface UserData {
   phone: string;
   created_at: string;
   pets: Pet[];
+  role: string;
 }
 
 const UserProfile: React.FC = () => {
