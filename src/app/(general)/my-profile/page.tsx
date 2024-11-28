@@ -42,7 +42,7 @@ const UserProfile: React.FC = () => {
 
         try {
           const response = await fetch(
-            `http://localhost:3000/auth/${user_id}`,
+            `http://petsocietyback-production.up.railway.app/auth/${user_id}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

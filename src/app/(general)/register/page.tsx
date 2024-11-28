@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/app/context/AuthContext";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://petsocietyback-production.up.railway.app";
 
 export default function RegisterPage() {
   // Datos del usuario
