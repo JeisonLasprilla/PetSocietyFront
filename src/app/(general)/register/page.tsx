@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/app/context/AuthContext";
 
-const BASE_URL = "https://petsociety-production.up.railway.app";
+const BASE_URL = "http://localhost:3000";
 
 export default function RegisterPage() {
   // Datos del usuario
@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Datos de la mascota
   const [petname, setPetname] = useState("");
@@ -39,52 +40,55 @@ export default function RegisterPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step === 1) {
-      if (!username || !password || !phone || !email || !address) {
-        alert("Por favor complete todos los campos");
-        return;
-      }
-      // Registrar usuario
-      try {
-        
-        const response = await axios.post(`${BASE_URL}/auth/register`, {
-          name: `${username} ${userlastname}`,
-          email,
-          password,
-        });
-        console.log("Usuario registrado:", response.data);
+        if (!username || !password || !phone || !email || !address) {
+            alert("Por favor complete todos los campos");
+            return;
+        }
+        // Registrar usuario
+        try {
+            const userResponse = await axios.post(`${BASE_URL}/auth/register`, {
+                name: `${username} ${userlastname}`,
+                email,
+                password,
+            });
+            console.log("Usuario registrado:", userResponse.data);
+            const newUserId = userResponse.data.id; // Obtener el ID del usuario
+            setUserId(newUserId); // Almacenar el userId en el estado
 
-        await axios.post(`${BASE_URL}/patients/register`, {
-          address,
-          phone_number: phone,
-          userId: response.data.id,
-        });
-        
-
-        console.log("Paciente creado", response.data);
-        setStep(2);
-      } catch (error) {
-        console.error("Error al registrar usuario o paciente:", error);
-        alert("Error en el registro");
-      }
+            // Registrar paciente sin token
+            await axios.post(`${BASE_URL}/patients/register`, {
+                address,
+                phone_number: phone,
+                userId: newUserId,
+            });
+            console.log("Paciente creado", userResponse.data);
+            setStep(2);
+        } catch (error) {
+            console.error("Error al registrar usuario o paciente:", error);
+            alert("Error al registrar usuario. Inténtalo de nuevo.");
+        }
     } else {
-      // Completar registro de mascota
-      console.log(
-        username,
-        password,
-        phone,
-        email,
-        address,
-        petname,
-        species,
-        breed,
-        gender,
-        birthdate,
-        height,
-        weight,
-        bloodtype,
-        medicalailments
-      );
-      router.push("/profile");
+        // Completar registro de mascota
+        try {
+            if (!userId) {
+                alert("Error al registrar usuario. Inténtalo de nuevo.");
+                return;
+            }
+            const petResponse = await axios.post(`${BASE_URL}/pets/register`, {
+                name: petname,
+                species,
+                breed,
+                birth_date: birthdate,
+                gender,
+                weight,
+                user: userId, // Usar el ID del usuario almacenado en el estado
+            });
+            console.log("Mascota registrada:", petResponse.data);
+            router.push("/profile");
+        } catch (error) {
+            console.error("Error al registrar mascota:", error);
+            alert("Error en el registro de la mascota");
+        }
     }
   };
 

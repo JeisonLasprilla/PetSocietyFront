@@ -2,99 +2,118 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Card, FocusCards } from "@/components/ui/focus-cards"; // Asegúrate de que la ruta sea correcta
-
-interface UserInfo {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  registrationDate: string;
-}
+import { useState, useEffect } from "react";
+import { Card, FocusCards } from "@/components/ui/focus-cards";
+import Cookies from "js-cookie";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 interface Pet {
   title: string;
   src: string;
 }
 
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+  pets: Pet[];
+}
+
 const UserProfile: React.FC = () => {
   const router = useRouter();
-  const [userInfo, setUserInfo] = useState<UserInfo>({
-    id: "xxxxxxxxxxxxxxxxx",
-    name: "Usuario xxxxxxxxxxxxxxxx",
-    email: "xxxxxx@gmail.com",
-    phone: "+57 xxx xxx xx",
-    registrationDate: "xx/xx/xxxx",
-  });
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Ejemplo de mascotas - reemplaza estas URLs con las reales de tus mascotas
-  const pets: Pet[] = [
-    {
-      title: "Bruno",
-      src: "/pets/bruno.jpg", // Asegúrate de tener estas imágenes en tu carpeta public
-    },
-    {
-      title: "Manchas",
-      src: "/pets/manchas.jpg",
-    },
-    {
-      title: "Luna",
-      src: "/pets/luna.jpg",
-    },
-  ];
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const currentUser = Cookies.get("currentUser");
+      if (currentUser) {
+        const { token, user_id } = JSON.parse(currentUser);
 
-  const handleModify = () => {
-    router.push("my-profile/modify/");
-  };
+        try {
+          const response = await fetch(
+            `http://localhost:3000/auth/${user_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
-  const handleAddPet = () => {
-    router.push("/pet/");
-  };
+          if (!response.ok) {
+            throw new Error("Error al obtener los datos del usuario");
+          }
+
+          const data: UserData = await response.json();
+          console.log("Datos del usuario:", data);
+          setUserData(data);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          router.push("/login"); // Redirigir si hay un error
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        router.push("/login"); // Redirigir si no hay usuario logueado
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
+
+  if (!userData) {
+    return <p>No se encontró información del usuario.</p>;
+  }
 
   return (
     <div className="min-h-screen bg-white p-10">
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex flex-col items-center">
-          <Image
-            src="/user-avatar.jpg"
-            alt="User Avatar"
-            width={80}
-            height={80}
-            className="rounded-full mb-4"
-          />
-          <h1 className="text-2xl font-bold mb-2">{userInfo.name}</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            <FontAwesomeIcon icon={faUser} className="mr-2" />
+          </h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {userData.name}
+          </h1>
           <h2 className="text-xl font-bold mb-4 mt-4">Información</h2>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <p className="text-gray-500 mb-1">{userInfo.email}</p>
-          <p className="text-gray-500 mb-1">{userInfo.phone}</p>
+          <p className="text-gray-500 mb-1">{userData.email}</p>
+          <p className="text-gray-500 mb-1">{userData.role}</p>
           <p className="text-gray-500 mb-1">
-            Fecha de registro: {userInfo.registrationDate}
+            Fecha de creación: {userData.created_at}
           </p>
-          <p className="text-gray-500 mb-1">ID: {userInfo.id}</p>
 
-          <button
-            onClick={handleModify}
-            className="bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors mt-2"
-          >
-            Modificar
-          </button>
+          <h2 className="text-xl font-bold mb-6 mt-8">Mascotas del Usuario</h2>
 
-          <h2 className="text-xl font-bold mb-6 mt-8">Mis Mascotas</h2>
-          
-          {/* Focus Cards para las mascotas */}
-          <div className="w-full">
-            <FocusCards cards={pets} />
+          {userData.pets && Array.isArray(userData.pets) && userData.pets.length > 0 ? (
+            userData.pets.map((pet) => (
+              <div key={pet.id} className="border p-4 mb-4 rounded-lg">
+                <h3 className="text-lg font-bold">{pet.name}</h3>
+                <p>Especie: {pet.species}</p>
+                <p>Raza: {pet.breed}</p>
+                <p>Fecha de nacimiento: {pet.birth_date}</p>
+                <p>Género: {pet.gender}</p>
+                <p>Peso: {pet.weight} kg</p>
+              </div>
+            ))
+          ) : (
+            <p>No tiene mascotas registradas.</p>
+          )}
+
+          <div className="mt-6">
+            <button
+              onClick={() => router.push('/register?step=2')}
+              className="bg-black text-white px-4 py-2 rounded-md"
+            >
+              Agregar Mascota
+            </button>
           </div>
-
-          <button
-            onClick={handleAddPet}
-            className="bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors mt-8"
-          >
-            Añadir Mascota
-          </button>
         </div>
       </div>
     </div>

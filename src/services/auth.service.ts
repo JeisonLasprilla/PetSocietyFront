@@ -5,7 +5,7 @@ export class AuthService {
 
     public constructor() {
         this.axios = axios.create({
-            baseURL: 'https://petsociety-production.up.railway.app',
+            baseURL: 'http://localhost:3000',
             headers: {
                 'Content-Type': 'application/json'
             },

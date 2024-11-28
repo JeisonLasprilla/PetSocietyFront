@@ -16,7 +16,7 @@ const PatientsList = () => {
   const fetchUser = async (userId: string): Promise<User | null> => {
     try {
       const response = await fetch(
-        `https://petsociety-production.up.railway.app/auth/${userId}`,
+        `http://localhost:3000/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -38,7 +38,7 @@ const PatientsList = () => {
   const fetchPatients = async () => {
     try {
       const response = await fetch(
-        "https://petsociety-production.up.railway.app/patients/",
+        "http://localhost:3000/patients/",
         {
           headers: {
             Authorization: `Bearer ${token}`,
