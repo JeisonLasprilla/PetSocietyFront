@@ -9,8 +9,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 interface Pet {
-  title: string;
-  src: string;
+  id: string;
+  name: string;
+  species: string;
+  breed: string;
+  birth_date: string;
+  gender: string,
+  weight: string
+  // otras propiedades...
 }
 
 interface UserData {
