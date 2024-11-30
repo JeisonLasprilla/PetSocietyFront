@@ -1,131 +1,195 @@
 "use client";
 
 import { useState } from "react";
-import Brand from "../../../components/brand-logo/Brand";
+import { useRouter } from "next/navigation";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import axios from "axios";
+import Cookies from "js-cookie";
 
-const PetRegistration = () => {
+const BASE_URL = "https://petsocietyback-production.up.railway.app";
+
+export default function AddPetPage() {
+  const router = useRouter();
   const [petData, setPetData] = useState({
-    nombre: "",
-    especie: "",
-    raza: "",
-    sexo: "",
-    fechaNacimiento: "",
-    altura: "",
-    peso: "",
+    name: "",
+    species: "",
+    breed: "",
+    birth_date: "",
+    gender: "",
+    weight: ""
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPetData({ ...petData, [e.target.name]: e.target.value });
+    const { id, value } = e.target;
+    setPetData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(petData); // Aquí puedes agregar la lógica de envío de datos
-  };
+  
+    // Validar que todos los campos estén llenos
+    const isAllFieldsFilled = Object.values(petData).every(value => value.trim() !== "");
+  
+    if (!isAllFieldsFilled) {
+      alert("Por favor complete todos los campos");
+      return;
+    }
+  
+    try {
+      // Obtener el usuario actual de las cookies
+      const currentUser = Cookies.get("currentUser");
+      if (!currentUser) {
+        router.push("/auth/login");
+        return;
+      }
+  
+      const { token, user_id } = JSON.parse(currentUser);
+  
+      // Crear la mascota
+      const petResponse = await axios.post(
+        `${BASE_URL}/pets/register`,
+        {
+          ...petData,
+          weight: parseFloat(petData.weight),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const createdPet = petResponse.data;
+      console.log("Mascota creada:", createdPet);
+  
+      // Asociar la mascota al usuario
+      await axios.patch(
+        `${BASE_URL}/users/${user_id}/add-pet`,
+        {
+          petIds: [createdPet.id], // Usa el ID de la mascota creada
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log("Mascota asociada al usuario");
+      alert("Mascota registrada y asociada exitosamente");
+  
+      // Redirigir al perfil de usuario
+      router.push("/profile");
+    } catch (error) {
+      console.error("Error al registrar o asociar mascota:", error);
+      alert("Error al registrar o asociar mascota. Inténtalo de nuevo.");
+    }
+  };  
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="flex justify-center bg-white p-4">
-        <Brand />
-      </div>
-      <div className="bg-white p-4">
-        <form
-          onSubmit={handleSubmit}
-          className="p-4 bg-white rounded-lg shadow-md max-w-md mx-auto text-black"
-        >
-          <h2 className="text-xl font-bold mb-4">Registro de Mascota</h2>
-          <div className="mb-4">
-            <label className="block mb-2">Nombre</label>
-            <input
-              type="text"
-              name="nombre"
-              placeholder="Nombre"
-              value={petData.nombre}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2">Especie</label>
-            <input
-              type="text"
-              name="especie"
-              placeholder="Especie"
-              value={petData.especie}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2">Raza</label>
-            <input
-              type="text"
-              name="raza"
-              placeholder="Raza"
-              value={petData.raza}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2">Sexo</label>
-            <input
-              type="text"
-              name="sexo"
-              placeholder="Sexo"
-              value={petData.sexo}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2">Fecha de Nacimiento</label>
-            <input
-              type="date"
-              name="fechaNacimiento"
-              placeholder="Fecha de Nacimiento"
-              value={petData.fechaNacimiento}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2">Altura</label>
-            <input
-              type="text"
-              name="altura"
-              placeholder="Altura"
-              value={petData.altura}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2">Peso (gr)</label>
-            <input
-              type="number"
-              name="peso"
-              placeholder="Peso (gr)"
-              value={petData.peso}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded text-black"
-            />
-          </div>
+    <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white dark:bg-black my-8 md:my-16">
+      <h2 className="font-bold text-xl text-neutral-800 dark:text-neutral-200">
+        Registrar Nueva Mascota
+      </h2>
+      <p className="text-neutral-600 text-sm max-w-sm mt-2 dark:text-neutral-300">
+        Ingresa los datos de tu mascota
+      </p>
+
+      <form className="my-8" onSubmit={onSubmit}>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="name">Nombre de la Mascota</Label>
+          <Input
+            id="name"
+            placeholder="Nombre"
+            type="text"
+            value={petData.name}
+            onChange={handleChange}
+          />
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="species">Especie</Label>
+          <Input
+            id="species"
+            placeholder="Ejemplo: Perro, Gato"
+            type="text"
+            value={petData.species}
+            onChange={handleChange}
+          />
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="breed">Raza</Label>
+          <Input
+            id="breed"
+            placeholder="Raza de la mascota"
+            type="text"
+            value={petData.breed}
+            onChange={handleChange}
+          />
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="birth_date">Fecha de Nacimiento</Label>
+          <Input
+            id="birth_date"
+            type="date"
+            value={petData.birth_date}
+            onChange={handleChange}
+          />
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="gender">Género</Label>
+          <Input
+            id="gender"
+            placeholder="Macho o Hembra"
+            type="text"
+            value={petData.gender}
+            onChange={handleChange}
+          />
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="weight">Peso (kg)</Label>
+          <Input
+            id="weight"
+            placeholder="Peso en kilogramos"
+            type="number"
+            step="0.1"
+            value={petData.weight}
+            onChange={handleChange}
+          />
+        </LabelInputContainer>
+
+        <div className="flex flex-row space-x-2">
           <button
+            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
             type="submit"
-            className="w-full bg-black text-white py-2 px-4 rounded hover:bg-black"
           >
-            Registrar
+            Registrar Mascota
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
+      {children}
     </div>
   );
 };
-
-export default PetRegistration;

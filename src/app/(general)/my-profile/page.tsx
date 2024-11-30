@@ -115,7 +115,7 @@ const UserProfile: React.FC = () => {
 
           <div className="mt-6">
             <button
-              onClick={() => router.push('/register?step=2')}
+              onClick={() => router.push('pet')}
               className="bg-black text-white px-4 py-2 rounded-md"
             >
               Agregar Mascota
