@@ -15,8 +15,7 @@ const publicNavItems = [
 
 const userNavItems = [
     {name:'Inicio', path: '/'},
-    {name:'Mis Citas', path: '/appointment'},
-    {name:'Historial Médico', path: '/medical-history/user'},
+    {name:'Opiniones', path: '/opiniones'},
     {name:'Contacto', path: '/contact'},
     {name:'Mi Perfil', path: '/my-profile'}
 ];
