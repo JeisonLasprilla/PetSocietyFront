@@ -6,13 +6,11 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
 interface Comment {
-    id: string;
-    user: {
-        id: string;
-        name: string;
-    };
-    content: string;
-    created_at: string;
+    _id: string;
+    text: string;
+    author: string;
+    createdAt: string;
+    __v: number;
 }
 
 const BASE_URL = "https://petsocietyback-production.up.railway.app";
@@ -29,6 +27,7 @@ export default function OpinionesPage() {
     const fetchComments = async () => {
         try {
             const response = await axios.get(`${BASE_URL}/comments`);
+            console.log("Comentarios recibidos:", response.data);
             setComments(response.data);
         } catch (error) {
             console.error("Error al obtener los comentarios:", error);
@@ -55,7 +54,7 @@ export default function OpinionesPage() {
 
             await axios.post(
                 `${BASE_URL}/comments`,
-                { content: newComment },
+                { text: newComment },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -67,7 +66,7 @@ export default function OpinionesPage() {
             setNewComment("");
             fetchComments();
             alert("Comentario agregado exitosamente.");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error al agregar el comentario:", error);
             alert("Error al agregar el comentario. Inténtalo de nuevo.");
         }
@@ -96,10 +95,10 @@ export default function OpinionesPage() {
             <div>
                 {comments.length > 0 ? (
                     comments.map((comment) => (
-                        <div key={comment.id} className="mb-4 p-4 border rounded">
-                            <p className="text-gray-700">{comment.content}</p>
+                        <div key={comment._id} className="mb-4 p-4 border rounded">
+                            <p className="text-gray-700">{comment.text}</p>
                             <p className="text-gray-500 text-sm mt-2">
-                                - {comment.user.name} el {new Date(comment.created_at).toLocaleDateString()}
+                                - {comment.author || "Autor desconocido"} el {new Date(comment.createdAt).toLocaleDateString()}
                             </p>
                         </div>
                     ))
