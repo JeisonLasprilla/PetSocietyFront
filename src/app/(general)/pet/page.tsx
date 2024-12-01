@@ -66,10 +66,11 @@ export default function AddPetPage() {
   
       const createdPet = petResponse.data;
       console.log("Mascota creada:", createdPet);
+      console.log("ID de la mascota:", createdPet.id);
   
       // Asociar la mascota al usuario
       await axios.patch(
-        `${BASE_URL}/users/${user_id}/add-pet`,
+        `${BASE_URL}/auth/${user_id}/add-pet`,
         {
           petIds: [createdPet.id], // Usa el ID de la mascota creada
         },
@@ -84,7 +85,7 @@ export default function AddPetPage() {
       alert("Mascota registrada y asociada exitosamente");
   
       // Redirigir al perfil de usuario
-      router.push("/profile");
+      router.push("/my-profile");
     } catch (error) {
       console.error("Error al registrar o asociar mascota:", error);
       alert("Error al registrar o asociar mascota. Inténtalo de nuevo.");
